@@ -610,31 +610,44 @@
 
         // Create full tournament date range from Start/Start_1 and End/End_1 columns
         function createTournamentDateRange(row) {
-            console.log('Processing row for:', row.Team); // Debug log
+            console.log('Processing row for:', row.Team, 'Available keys:', Object.keys(row)); // Debug log
             
-            // The actual date is in Start_1 (second Start column) like "5/27"
+            // Try different possible column names for start date
             let startDateStr = '';
-            if (row.Start_1 && row.Start_1.trim() !== '') {
-                startDateStr = row.Start_1.trim();
+            const possibleStartCols = ['Start_1', 'Start 1', 'Start1', 'StartDate', 'Date'];
+            for (const col of possibleStartCols) {
+                if (row[col] && row[col].trim() !== '' && row[col] !== 'Tu' && row[col] !== 'We' && row[col] !== 'Th' && row[col] !== 'Fr' && row[col] !== 'Sa' && row[col] !== 'Su' && row[col] !== 'Mo') {
+                    startDateStr = row[col].trim();
+                    console.log(`Found start date in column ${col}:`, startDateStr);
+                    break;
+                }
             }
 
-            // The end date is in End_1 (second End column) 
+            // Try different possible column names for end date  
             let endDateStr = '';
-            if (row.End_1 && row.End_1.trim() !== '') {
-                endDateStr = row.End_1.trim();
-            } else {
-                endDateStr = startDateStr; // Single day tournament
+            const possibleEndCols = ['End_1', 'End 1', 'End1', 'EndDate'];
+            for (const col of possibleEndCols) {
+                if (row[col] && row[col].trim() !== '' && row[col] !== 'Tu' && row[col] !== 'We' && row[col] !== 'Th' && row[col] !== 'Fr' && row[col] !== 'Sa' && row[col] !== 'Su' && row[col] !== 'Mo') {
+                    endDateStr = row[col].trim();
+                    console.log(`Found end date in column ${col}:`, endDateStr);
+                    break;
+                }
+            }
+
+            // If no end date, use start date
+            if (!endDateStr) {
+                endDateStr = startDateStr;
             }
 
             // Convert from M/D format to MM/DD format for consistency
-            if (startDateStr) {
+            if (startDateStr && startDateStr.includes('/')) {
                 startDateStr = formatDateString(startDateStr);
             }
-            if (endDateStr) {
+            if (endDateStr && endDateStr.includes('/')) {
                 endDateStr = formatDateString(endDateStr);
             }
 
-            console.log(`Date range for ${row.Team}: start=${startDateStr}, end=${endDateStr}`); // Debug log
+            console.log(`Final date range for ${row.Team}: start=${startDateStr}, end=${endDateStr}`); // Debug log
 
             return {
                 startDate: startDateStr,
@@ -658,15 +671,38 @@
             return `${month}/${day}`;
         }
 
-        // Parse CSV data
+        // Parse CSV data with better handling
         function parseCSV(csvText) {
             const lines = csvText.split('\n');
             const headers = lines[0].split(',').map(h => h.trim());
             
             console.log('CSV Headers found:', headers); // Debug log
+            console.log('Total headers count:', headers.length);
             
             const data = [];
-            for (let i = 1; i < lines.length; i++) {
+            for (let i = 1; i < lines.length && i < 5; i++) { // Only log first few rows
+                if (lines[i].trim()) {
+                    const values = lines[i].split(',');
+                    const row = {};
+                    headers.forEach((header, index) => {
+                        row[header] = values[index] ? values[index].trim() : '';
+                    });
+                    
+                    console.log(`Row ${i} sample:`, {
+                        Team: row.Team,
+                        Start: row.Start,
+                        Start_1: row.Start_1 || row['Start_1'],
+                        End: row.End,
+                        End_1: row.End_1 || row['End_1'],
+                        Opponent: row.Opponent
+                    });
+                    
+                    data.push(row);
+                }
+            }
+            
+            // Continue parsing all rows
+            for (let i = 5; i < lines.length; i++) {
                 if (lines[i].trim()) {
                     const values = lines[i].split(',');
                     const row = {};
@@ -677,7 +713,7 @@
                 }
             }
             
-            console.log('Sample parsed row:', data[0]); // Debug log
+            console.log('Total rows parsed:', data.length);
             return data;
         }
 
