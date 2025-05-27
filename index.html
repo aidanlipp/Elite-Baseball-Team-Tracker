@@ -402,7 +402,7 @@
 
         <div id="mapView" class="tab-content active">
             <div class="info-box">
-                <strong>Demo Mode:</strong> This is running with sample data based on your CSV structure. To use with your actual Google Sheet, you'll deploy this and connect your data source.
+                <strong>Live Data:</strong> This app is connected to your Google Sheets and will automatically load the latest tournament schedule. Click "Load Schedule" to refresh data.
             </div>
 
             <div class="controls">
@@ -636,12 +636,81 @@
             }).addTo(map);
         }
 
-        // Load sample data
-        function loadData() {
-            tournamentsData = [...sampleTournamentData];
-            filteredData = [...sampleTournamentData];
-            flaggedData = [...sampleFlaggedData];
-            updateDisplay();
+        // Load data from Google Sheets
+        async function loadData() {
+            showLoading();
+            
+            try {
+                // Your Google Sheet ID
+                const sheetId = '1_f1JKSRFNjTrNFBWRW9hYUllgVlezOzHoedxzDWOnys';
+                const gid = '473783352'; // Your specific sheet tab
+                
+                // Convert to CSV export URL
+                const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+                
+                const response = await fetch(csvUrl);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch data. Make sure the sheet is publicly accessible.');
+                }
+
+                const csvText = await response.text();
+                const parsedData = parseCSV(csvText);
+                
+                // Filter out NPU Practice and process tournament data
+                const tournamentEntries = parsedData.filter(row => 
+                    row.Opponent && !row.Opponent.includes('NPU Practice') && row.Opponent.trim() !== ''
+                );
+
+                // Separate flagged and regular tournaments
+                flaggedData = tournamentEntries.filter(row => 
+                    flaggedLocations.includes(row.Location)
+                );
+
+                const regularTournaments = tournamentEntries.filter(row => 
+                    !flaggedLocations.includes(row.Location)
+                );
+
+                // Process regular tournaments
+                tournamentsData = regularTournaments.map(row => {
+                    let location = row.Location;
+                    
+                    // Apply location mappings
+                    if (locationMappings[location]) {
+                        location = locationMappings[location];
+                    }
+
+                    // Get coordinates
+                    const coords = getCoordinates(location);
+
+                    return {
+                        age: row.Age,
+                        team: row.Team,
+                        date: row.Start_1,
+                        endDate: row.End_1,
+                        tournament: row.Opponent,
+                        location: location,
+                        originalLocation: row.Location,
+                        time: row.Time,
+                        lat: coords.lat,
+                        lng: coords.lng
+                    };
+                });
+
+                filteredData = [...tournamentsData];
+                updateDisplay();
+                hideLoading();
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError('Error loading Google Sheets data: ' + error.message + '. Using sample data instead.');
+                
+                // Fallback to sample data
+                tournamentsData = [...sampleTournamentData];
+                filteredData = [...sampleTournamentData];
+                flaggedData = [...sampleFlaggedData];
+                updateDisplay();
+                hideLoading();
+            }
         }
 
         // Filter data
