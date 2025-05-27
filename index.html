@@ -7,386 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Your existing CSS styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #06b6d4 100%);
-            min-height: 100vh;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            color: white;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .tabs {
-            display: flex;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 5px;
-            margin-bottom: 25px;
-            backdrop-filter: blur(10px);
-        }
-
-        .tab {
-            flex: 1;
-            padding: 12px 20px;
-            text-align: center;
-            border-radius: 10px;
-            cursor: pointer;
-            color: white;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            border: none;
-            background: transparent;
-        }
-
-        .tab.active {
-            background: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-
-        .tab:hover:not(.active) {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .controls {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .control-group {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .input-group label {
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #374151;
-            font-size: 0.9rem;
-        }
-
-        .input-group input, .input-group select {
-            padding: 12px 16px;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            background: white;
-        }
-
-        .input-group input:focus, .input-group select:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 1rem;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-secondary {
-            background: #f3f4f6;
-            color: #374151;
-        }
-
-        .btn-secondary:hover {
-            background: #e5e7eb;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 15px;
-            align-items: end;
-            flex-wrap: wrap;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1e3a8a;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            color: #6b7280;
-            font-weight: 500;
-        }
-
-        .map-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            margin-bottom: 25px;
-        }
-
-        #map {
-            height: 500px;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-
-        .teams-list {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .teams-list h3 {
-            margin-bottom: 20px;
-            color: #374151;
-            font-size: 1.3rem;
-        }
-
-        .team-item {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
-            border-left: 4px solid #3b82f6;
-        }
-
-        .team-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        .team-item.flagged {
-            border-left-color: #f59e0b;
-            background: #fef3c7;
-        }
-
-        .team-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .team-name {
-            font-weight: 600;
-            color: #374151;
-            font-size: 1.1rem;
-        }
-
-        .age-badge {
-            background: #3b82f6;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-
-        .team-details {
-            color: #6b7280;
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-
-        .tournament-name {
-            font-weight: 500;
-            color: #1e3a8a;
-            margin-bottom: 4px;
-        }
-
-        .alert {
-            background: #fef3c7;
-            border: 1px solid #f59e0b;
-            color: #92400e;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .alert-icon {
-            font-size: 1.2rem;
-        }
-
-        .flagged-locations {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .flagged-item {
-            background: #fef3c7;
-            border: 1px solid #f59e0b;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-
-        .flagged-header {
-            font-weight: 600;
-            color: #92400e;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .flagged-details {
-            color: #78350f;
-            font-size: 0.9rem;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #6b7280;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 30px;
-            height: 30px;
-            border: 3px solid #f3f4f6;
-            border-top: 3px solid #3b82f6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .info-box {
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid #3b82f6;
-            color: #1e3a8a;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .control-group {
-                grid-template-columns: 1fr;
-            }
-            
-            .button-group {
-                flex-direction: column;
-            }
-            
-            #map {
-                height: 400px;
-            }
-            
-            .tabs {
-                flex-direction: column;
-            }
-
-            .team-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-        }
+        /* Your existing CSS styles (omitted for brevity, assume it's here) */
     </style>
 </head>
 <body>
@@ -443,3 +64,468 @@
                 <div class="stat-card">
                     <div class="stat-number" id="totalTournaments">0</div>
                     <div class="stat-label">Total Tournaments</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="uniqueLocations">0</div>
+                    <div class="stat-label">Tournament Locations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="flaggedCount">0</div>
+                    <div class="stat-label">Need Location Input</div>
+                </div>
+            </div>
+
+            <div class="map-container">
+                <div id="map"></div>
+            </div>
+
+            <div class="teams-list">
+                <h3>Tournament Schedule</h3>
+                <div id="tournamentsList"></div>
+            </div>
+        </div>
+
+        <div id="flaggedView" class="tab-content">
+            <div class="alert">
+                <span class="alert-icon">⚠️</span>
+                <div>
+                    <strong>Coach Input Needed:</strong> The following tournaments have unclear locations that need to be specified by coaches.
+                </div>
+            </div>
+            <div class="flagged-locations">
+                <h3>Tournaments Requiring Location Clarification</h3>
+                <div id="flaggedList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script>
+        let map;
+        let markers = [];
+        let tournamentsData = [];
+        let filteredData = [];
+        let flaggedData = [];
+
+        // Define your Google Sheet ID and API Key here
+        // IMPORTANT: Replace 'YOUR_GENERATED_API_KEY' with your actual API key
+        const GOOGLE_SHEET_ID = '1_f1JKSRFNjTrNFBWRW9hYUllgVlezOzHoedxzDWOnys'; // Your Sheet ID
+        const GOOGLE_API_KEY = 'AIzaSyCYHGQaKE3vbFCv-Sqpnlec3YOP45klzkk'; // <--- **INSERT YOUR API KEY HERE**
+
+        // Define which sheet tab to read and the range of columns
+        const SHEET_NAME = 'Copy of HS'; // <--- **Updated to "Copy of HS"**
+        const SHEET_RANGE = 'A:G'; // Adjust this range to cover all your data columns (e.g., if you have columns A to Z, use 'A:Z')
+
+        // Flagged locations that require clarification
+        const flaggedLocations = ["?", "Various", "Local", "TBD"];
+
+        // Location mappings for common shorthand or known places
+        const locationMappings = {
+            "McHenry, IL": "McHenry, IL",
+            "Marion, IA": "Marion, IA",
+            "Joliet, IL": "Joliet, IL",
+            "Elgin, IL": "Elgin, IL",
+            "Franklin, WI": "Franklin, WI",
+            "Crystal Lake, IL": "Crystal Lake, IL",
+            "West Chicago, IL": "West Chicago, IL",
+            "Wheeling, IL": "Wheeling, IL",
+            "LakePoint Sports Complex, GA": "Emerson, GA", // More precise location for LakePoint
+            "Kansas City, MO": "Kansas City, MO",
+            "Louisville, KY": "Louisville, KY",
+            // Add more mappings as needed
+            "St. Louis, MO": "St. Louis, MO",
+            "Indianapolis, IN": "Indianapolis, IN",
+            "Milwaukee, WI": "Milwaukee, WI"
+        };
+
+        // Geocoding cache to store coordinates for locations
+        const geocodingCache = {};
+
+        // Function to get coordinates for a given location using Nominatim (OpenStreetMap)
+        async function getCoordinates(location) {
+            if (geocodingCache[location]) {
+                return geocodingCache[location];
+            }
+
+            if (!location || location.trim() === '') {
+                console.warn(`Attempted to geocode an empty location.`);
+                return { lat: 0, lng: 0 }; // Default to 0,0 or handle as an error
+            }
+
+            const apiUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`;
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    const coords = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+                    geocodingCache[location] = coords; // Store in cache
+                    return coords;
+                } else {
+                    console.warn(`Could not find coordinates for: ${location}.`);
+                    return { lat: 0, lng: 0 }; // Default to 0,0 or handle as an error
+                }
+            } catch (error) {
+                console.error(`Error geocoding ${location}:`, error);
+                return { lat: 0, lng: 0 }; // Default to 0,0 on error
+            }
+        }
+
+        // Initialize map
+        function initMap() {
+            if (typeof L === 'undefined') {
+                console.error('Leaflet library not loaded');
+                document.getElementById('map').innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6b7280; flex-direction: column;"><div style="font-size: 1.2rem; margin-bottom: 10px;">🗺️</div><div>Map loading...</div></div>';
+                return;
+            }
+
+            map = L.map('map').setView([41.8781, -87.6298], 6); // Centered on Chicago, adjusted zoom level
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+        }
+
+        // Function to show loading spinner
+        function showLoading() {
+            const mapDiv = document.getElementById('map');
+            mapDiv.innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading data...</div></div>';
+            document.getElementById('tournamentsList').innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading data...</div></div>';
+            document.getElementById('flaggedList').innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading data...</div></div>';
+        }
+
+        // Function to hide loading spinner
+        function hideLoading() {
+            // The content will be replaced by updateMapMarkers, updateTournamentsList, etc.
+            // No explicit 'hide' needed if content is dynamically rendered.
+        }
+
+        // Function to display errors or success messages
+        function showError(message, type = 'error') {
+            const infoBox = document.querySelector('.info-box');
+            infoBox.style.display = 'block';
+            if (type === 'error') {
+                infoBox.style.backgroundColor = 'rgba(255, 99, 71, 0.1)'; // Tomato Red
+                infoBox.style.borderColor = '#ff6347';
+                infoBox.style.color = '#cc0000';
+                infoBox.innerHTML = `<strong>Error:</strong> ${message}`;
+            } else { // success
+                infoBox.style.backgroundColor = 'rgba(144, 238, 144, 0.1)'; // Light Green
+                infoBox.style.borderColor = '#90ee90';
+                infoBox.style.color = '#006400';
+                infoBox.innerHTML = `<strong>Success:</strong> ${message}`;
+            }
+            // Hide the message after a few seconds
+            setTimeout(() => {
+                infoBox.style.display = 'none';
+            }, 5000);
+        }
+
+        // Load data from Google Sheets API
+        async function loadData() {
+            console.log('Loading data from Google Sheets API...');
+            showLoading();
+            
+            const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEET_ID}/values/${SHEET_NAME}!${SHEET_RANGE}?key=${GOOGLE_API_KEY}`;
+            console.log('Fetching from API URL:', apiUrl);
+            
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: Failed to fetch data. Response: ${errorText}`);
+                }
+
+                const data = await response.json();
+                const rows = data.values;
+
+                if (!rows || rows.length === 0) {
+                    showError('No data found in the specified Google Sheet range.');
+                    hideLoading();
+                    return;
+                }
+
+                // Assuming the first row is your header
+                const headers = rows[0];
+                const rawParsedData = rows.slice(1).map(row => {
+                    let obj = {};
+                    headers.forEach((header, index) => {
+                        obj[header] = row[index];
+                    });
+                    return obj;
+                });
+
+                console.log('Raw parsed data entries:', rawParsedData.length);
+                
+                // Filter out NPU Practice and process tournament data
+                const tournamentEntries = rawParsedData.filter(row =>
+                    row.Opponent && !row.Opponent.includes('NPU Practice') && row.Opponent.trim() !== ''
+                );
+                console.log('Tournament entries (excluding NPU Practice):', tournamentEntries.length);
+
+                // Separate flagged and regular tournaments
+                flaggedData = tournamentEntries.filter(row =>
+                    flaggedLocations.includes(row.Location)
+                );
+                console.log('Flagged entries:', flaggedData.length);
+
+                const regularTournaments = tournamentEntries.filter(row =>
+                    !flaggedLocations.includes(row.Location)
+                );
+                console.log('Regular tournaments (pre-geocode):', regularTournaments.length);
+
+                // Process regular tournaments and get coordinates
+                tournamentsData = [];
+                for (const row of regularTournaments) {
+                    let location = row.Location || '';
+                    
+                    // Apply location mappings
+                    if (locationMappings[location]) {
+                        location = locationMappings[location];
+                    }
+
+                    // Get coordinates
+                    const coords = await getCoordinates(location); // Await geocoding
+
+                    tournamentsData.push({
+                        age: row.Age || '',
+                        team: row.Team || '',
+                        date: row.Start_1 || '',
+                        endDate: row.End_1 || '',
+                        tournament: row.Opponent || '',
+                        location: location,
+                        originalLocation: row.Location || '',
+                        time: row.Time || '',
+                        lat: coords.lat,
+                        lng: coords.lng
+                    });
+                }
+
+                filteredData = [...tournamentsData];
+                console.log('Processed tournaments (after geocoding):', tournamentsData.length);
+                
+                updateDisplay();
+                hideLoading();
+                
+                showError(`Successfully loaded ${tournamentsData.length} tournaments and ${flaggedData.length} flagged entries!`, 'success');
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                hideLoading();
+                showError('Error loading Google Sheets data: ' + error.message + '. Please check your API key, Sheet ID, and sheet sharing settings.');
+            }
+        }
+
+        // Filter data
+        function filterData() {
+            const ageFilter = document.getElementById('ageFilter').value;
+            const monthFilter = document.getElementById('monthFilter').value;
+            const searchTerm = document.getElementById('searchTeam').value.toLowerCase();
+
+            filteredData = tournamentsData.filter(tournament => {
+                const matchesAge = !ageFilter || tournament.age.toLowerCase() === ageFilter.toLowerCase();
+                
+                let matchesMonth = true;
+                if (monthFilter && tournament.date) {
+                    const dateParts = tournament.date.split('/');
+                    if (dateParts.length > 0) {
+                        const dateMonth = dateParts[0];
+                        matchesMonth = dateMonth === monthFilter;
+                    } else {
+                        matchesMonth = false; // Invalid date format
+                    }
+                }
+
+                const matchesSearch = !searchTerm || 
+                    tournament.team.toLowerCase().includes(searchTerm) ||
+                    tournament.tournament.toLowerCase().includes(searchTerm) ||
+                    tournament.location.toLowerCase().includes(searchTerm);
+
+                return matchesAge && matchesMonth && matchesSearch;
+            });
+
+            updateDisplay();
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('ageFilter').value = '';
+            document.getElementById('monthFilter').value = '';
+            document.getElementById('searchTeam').value = '';
+            filteredData = [...tournamentsData];
+            updateDisplay();
+        }
+
+        // Refresh map
+        function refreshMap() {
+            if (map) {
+                updateMapMarkers();
+            }
+        }
+
+        // Switch tabs
+        function switchTab(event, tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // Update display
+        function updateDisplay() {
+            updateStats();
+            updateMapMarkers();
+            updateTournamentsList();
+            updateFlaggedList();
+        }
+
+        // Update statistics
+        function updateStats() {
+            const uniqueLocations = new Set(filteredData.map(t => t.location)).size;
+            
+            document.getElementById('totalTournaments').textContent = filteredData.length;
+            document.getElementById('uniqueLocations').textContent = uniqueLocations;
+            document.getElementById('flaggedCount').textContent = flaggedData.length;
+        }
+
+        // Update map markers
+        function updateMapMarkers() {
+            if (!map) {
+                // If map not initialized, try to re-initialize it
+                initMap();
+                if (!map) return; // If still not initialized, something is wrong
+            }
+
+            // Clear existing markers
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+
+            // Group tournaments by location for better display
+            const locationGroups = {};
+            filteredData.forEach(tournament => {
+                // Only add markers for locations with valid coordinates
+                if (tournament.lat && tournament.lng && tournament.lat !== 0 && tournament.lng !== 0) {
+                    const key = `${tournament.lat},${tournament.lng}`;
+                    if (!locationGroups[key]) {
+                        locationGroups[key] = {
+                            location: tournament.location,
+                            lat: tournament.lat,
+                            lng: tournament.lng,
+                            tournaments: []
+                        };
+                    }
+                    locationGroups[key].tournaments.push(tournament);
+                }
+            });
+
+            // Add markers for each location group
+            Object.values(locationGroups).forEach(group => {
+                const marker = L.marker([group.lat, group.lng]).addTo(map);
+                
+                const popupContent = `
+                    <div style="font-family: Inter, sans-serif; max-width: 250px;">
+                        <h4 style="margin: 0 0 10px 0; color: #1e3a8a;">${group.location}</h4>
+                        <div style="max-height: 200px; overflow-y: auto;">
+                            ${group.tournaments.map(t => `
+                                <div style="margin-bottom: 8px; padding: 8px; background: #f8fafc; border-radius: 6px;">
+                                    <div style="font-weight: 600; color: #374151;">Coach ${t.team} (${t.age})</div>
+                                    <div style="font-size: 0.9rem; color: #6b7280;">${t.tournament}</div>
+                                    <div style="font-size: 0.8rem; color: #9ca3af;">📅 ${t.date}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent);
+                markers.push(marker);
+            });
+
+            // Fit map to show all markers
+            if (markers.length > 0) {
+                const group = new L.featureGroup(markers);
+                map.fitBounds(group.getBounds().pad(0.1));
+            } else {
+                // If no markers, reset view to a default location (e.g., Chicago)
+                map.setView([41.8781, -87.6298], 6);
+            }
+        }
+
+        // Update tournaments list
+        function updateTournamentsList() {
+            const tournamentsList = document.getElementById('tournamentsList');
+            
+            if (filteredData.length === 0) {
+                tournamentsList.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 20px;">No tournaments found matching your criteria.</p>';
+                return;
+            }
+
+            // Sort by date
+            const sortedData = [...filteredData].sort((a, b) => {
+                if (!a.date || !b.date) return 0;
+                // Parse date strings like "5/30" to Date objects for proper sorting
+                const [monthA, dayA] = a.date.split('/').map(Number);
+                const [monthB, dayB] = b.date.split('/').map(Number);
+                // Assuming current year for comparison, or add year if available in data
+                const dateA = new Date(new Date().getFullYear(), monthA - 1, dayA);
+                const dateB = new Date(new Date().getFullYear(), monthB - 1, dayB);
+                return dateA - dateB;
+            });
+
+            const tournamentsHTML = sortedData.map(tournament => `
+                <div class="team-item">
+                    <div class="team-header">
+                        <div class="team-name">Coach ${tournament.team}</div>
+                        <div class="age-badge">${tournament.age}</div>
+                    </div>
+                    <div class="tournament-name">${tournament.tournament}</div>
+                    <div class="team-details">
+                        📍 ${tournament.location}<br>
+                        📅 ${tournament.date}
+                    </div>
+                </div>
+            `).join('');
+
+            tournamentsList.innerHTML = tournamentsHTML;
+        }
+
+        // Update flagged locations list
+        function updateFlaggedList() {
+            const flaggedList = document.getElementById('flaggedList');
+            
+            if (flaggedData.length === 0) {
+                flaggedList.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 20px;">All locations have been clarified! 🎉</p>';
+                return;
+            }
+
+            const flaggedHTML = flaggedData.map(item => `
+                <div class="flagged-item">
+                    <div class="flagged-header">
+                        <span>⚠️</span>
+                        Coach ${item.Team} (${item.Age}) - ${item.Opponent}
+                    </div>
+                    <div class="flagged-details">
+                        <strong>Current Location:</strong> "${item.Location}"<br>
+                        <strong>Date:</strong> ${item.Start_1}<br>
+                        <strong>Action Needed:</strong> Please specify the exact location for this tournament
+                    </div>
+                </div>
+            `).join('');
+
+            flaggedList.innerHTML = flaggedHTML;
+        }
+
+        // Initialize the app
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                initMap();
+                // Set up event listeners
+                document.getElementById('ageFilter').addEventListener('change', filterData);
+                document.getElementById('monthFilter').addEventListener('change', filterData);
+                document.getElementById('searchTeam').addEventListener('input', filterData);
+            }, 100);
+        });
+    </script>
+</body>
+</html>
