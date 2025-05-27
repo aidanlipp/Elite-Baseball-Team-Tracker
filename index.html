@@ -608,35 +608,24 @@
             return new Date(currentYear, month, day);
         }
 
-        // Create full tournament date range from Start/Start_1 and End/End_1 columns
+        // Create full tournament date range from Start/Start_2 and End/End_2 columns
         function createTournamentDateRange(row) {
             console.log('Processing row for:', row.Team, 'Available keys:', Object.keys(row)); // Debug log
             
-            // Try different possible column names for start date
+            // The actual date should be in Start_2 (second Start column) like "5/27"
             let startDateStr = '';
-            const possibleStartCols = ['Start_1', 'Start 1', 'Start1', 'StartDate', 'Date'];
-            for (const col of possibleStartCols) {
-                if (row[col] && row[col].trim() !== '' && row[col] !== 'Tu' && row[col] !== 'We' && row[col] !== 'Th' && row[col] !== 'Fr' && row[col] !== 'Sa' && row[col] !== 'Su' && row[col] !== 'Mo') {
-                    startDateStr = row[col].trim();
-                    console.log(`Found start date in column ${col}:`, startDateStr);
-                    break;
-                }
+            if (row.Start_2 && row.Start_2.trim() !== '' && row.Start_2 !== 'Tu' && row.Start_2 !== 'We' && row.Start_2 !== 'Th' && row.Start_2 !== 'Fr' && row.Start_2 !== 'Sa' && row.Start_2 !== 'Su' && row.Start_2 !== 'Mo') {
+                startDateStr = row.Start_2.trim();
+                console.log(`Found start date in Start_2:`, startDateStr);
             }
 
-            // Try different possible column names for end date  
+            // The end date should be in End_2 (second End column)
             let endDateStr = '';
-            const possibleEndCols = ['End_1', 'End 1', 'End1', 'EndDate'];
-            for (const col of possibleEndCols) {
-                if (row[col] && row[col].trim() !== '' && row[col] !== 'Tu' && row[col] !== 'We' && row[col] !== 'Th' && row[col] !== 'Fr' && row[col] !== 'Sa' && row[col] !== 'Su' && row[col] !== 'Mo') {
-                    endDateStr = row[col].trim();
-                    console.log(`Found end date in column ${col}:`, endDateStr);
-                    break;
-                }
-            }
-
-            // If no end date, use start date
-            if (!endDateStr) {
-                endDateStr = startDateStr;
+            if (row.End_2 && row.End_2.trim() !== '' && row.End_2 !== 'Tu' && row.End_2 !== 'We' && row.End_2 !== 'Th' && row.End_2 !== 'Fr' && row.End_2 !== 'Sa' && row.End_2 !== 'Su' && row.End_2 !== 'Mo') {
+                endDateStr = row.End_2.trim();
+                console.log(`Found end date in End_2:`, endDateStr);
+            } else if (startDateStr) {
+                endDateStr = startDateStr; // Single day tournament
             }
 
             // Convert from M/D format to MM/DD format for consistency
@@ -671,13 +660,27 @@
             return `${month}/${day}`;
         }
 
-        // Parse CSV data with better handling
+        // Parse CSV data with better handling for duplicate column names
         function parseCSV(csvText) {
             const lines = csvText.split('\n');
-            const headers = lines[0].split(',').map(h => h.trim());
+            const rawHeaders = lines[0].split(',').map(h => h.trim());
             
-            console.log('CSV Headers found:', headers); // Debug log
-            console.log('Total headers count:', headers.length);
+            // Create unique headers by adding _1, _2, etc. for duplicates
+            const headers = [];
+            const headerCounts = {};
+            
+            rawHeaders.forEach(header => {
+                if (headerCounts[header]) {
+                    headerCounts[header]++;
+                    headers.push(`${header}_${headerCounts[header]}`);
+                } else {
+                    headerCounts[header] = 1;
+                    headers.push(header);
+                }
+            });
+            
+            console.log('Original CSV Headers:', rawHeaders);
+            console.log('Processed Headers:', headers);
             
             const data = [];
             for (let i = 1; i < lines.length && i < 5; i++) { // Only log first few rows
@@ -691,9 +694,9 @@
                     console.log(`Row ${i} sample:`, {
                         Team: row.Team,
                         Start: row.Start,
-                        Start_1: row.Start_1 || row['Start_1'],
+                        Start_2: row.Start_2, // This should now contain the actual date
                         End: row.End,
-                        End_1: row.End_1 || row['End_1'],
+                        End_2: row.End_2, // This should contain the end date
                         Opponent: row.Opponent
                     });
                     
