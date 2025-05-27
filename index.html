@@ -796,12 +796,18 @@
                 return;
             }
             
+            console.log('Filtering by specific date:', specificDateStr);
             const specificDate = new Date(specificDateStr);
+            console.log('Parsed specific date:', specificDate);
             
             // Filter tournaments that are active on this specific date
-            const tournamentsOnDate = tournamentsData.filter(tournament => 
-                isDateInTournamentRange(specificDate, tournament)
-            );
+            const tournamentsOnDate = tournamentsData.filter(tournament => {
+                const isInRange = isDateInTournamentRange(specificDate, tournament);
+                console.log(`Tournament ${tournament.team}: ${tournament.dateRange}, In range: ${isInRange}`);
+                return isInRange;
+            });
+            
+            console.log('Tournaments found on date:', tournamentsOnDate.length);
             
             // Apply other filters on top of date filter
             const ageFilter = document.getElementById('ageFilter').value;
@@ -828,6 +834,7 @@
                 </div>
             `;
             
+            console.log('Final filtered data:', filteredData.length);
             updateDisplay();
         }
 
