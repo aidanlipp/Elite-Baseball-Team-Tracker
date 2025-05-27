@@ -432,8 +432,9 @@
                     </div>
                 </div>
                 <div class="button-group">
+                    <button class="btn btn-primary" onclick="loadData()">Load Schedule</button>
                     <button class="btn btn-secondary" onclick="clearFilters()">Clear Filters</button>
-                    <button class="btn btn-primary" onclick="refreshMap()">Refresh Map</button>
+                    <button class="btn btn-secondary" onclick="refreshMap()">Refresh Map</button>
                 </div>
             </div>
 
@@ -899,7 +900,7 @@
             // Wait for Leaflet to load
             setTimeout(() => {
                 initMap();
-                loadData();
+                // Don't auto-load data, wait for user to click "Load Schedule"
                 
                 // Set up event listeners
                 document.getElementById('ageFilter').addEventListener('change', filterData);
