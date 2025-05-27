@@ -544,7 +544,7 @@
             'Local': { lat: 41.8781, lng: -87.6298 }
         };
 
-        // Utility functions - DEFINED FIRST!
+        // Utility functions
         function showLoading() {
             const tournamentsList = document.getElementById('tournamentsList');
             tournamentsList.innerHTML = `
@@ -816,4 +816,98 @@
                             ${group.tournaments.map(t => `
                                 <div style="margin-bottom: 8px; padding: 8px; background: #f8fafc; border-radius: 6px;">
                                     <div style="font-weight: 600; color: #374151;">Coach ${t.team} (${t.age})</div>
-                                    <div style="font-size: 0.9rem; color: #6b7280;"
+                                    <div style="font-size: 0.9rem; color: #6b7280;">${t.tournament}</div>
+                                    <div style="font-size: 0.8rem; color: #9ca3af;">📅 ${t.date}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent);
+                markers.push(marker);
+            });
+
+            // Fit map to show all markers
+            if (markers.length > 0) {
+                const group = new L.featureGroup(markers);
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
+        }
+
+        // Update tournaments list
+        function updateTournamentsList() {
+            const tournamentsList = document.getElementById('tournamentsList');
+            
+            if (filteredData.length === 0) {
+                tournamentsList.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 20px;">No tournaments found matching your criteria.</p>';
+                return;
+            }
+
+            // Sort by date
+            const sortedData = [...filteredData].sort((a, b) => {
+                if (!a.date || !b.date) return 0;
+                const [monthA, dayA] = a.date.split('/').map(Number);
+                const [monthB, dayB] = b.date.split('/').map(Number);
+                return monthA !== monthB ? monthA - monthB : dayA - dayB;
+            });
+
+            const tournamentsHTML = sortedData.map(tournament => `
+                <div class="team-item">
+                    <div class="team-header">
+                        <div class="team-name">Coach ${tournament.team}</div>
+                        <div class="age-badge">${tournament.age}</div>
+                    </div>
+                    <div class="tournament-name">${tournament.tournament}</div>
+                    <div class="team-details">
+                        📍 ${tournament.location}<br>
+                        📅 ${tournament.date}${tournament.endDate && tournament.endDate !== tournament.date ? ` - ${tournament.endDate}` : ''}
+                        ${tournament.time ? `<br>⏰ ${tournament.time}` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            tournamentsList.innerHTML = tournamentsHTML;
+        }
+
+        // Update flagged locations list
+        function updateFlaggedList() {
+            const flaggedList = document.getElementById('flaggedList');
+            
+            if (flaggedData.length === 0) {
+                flaggedList.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 20px;">All locations have been clarified! 🎉</p>';
+                return;
+            }
+
+            const flaggedHTML = flaggedData.map(item => `
+                <div class="flagged-item">
+                    <div class="flagged-header">
+                        <span>⚠️</span>
+                        Coach ${item.Team} (${item.Age}) - ${item.Opponent}
+                    </div>
+                    <div class="flagged-details">
+                        <strong>Current Location:</strong> "${item.Location}"<br>
+                        <strong>Date:</strong> ${item.Start_1}<br>
+                        <strong>Action Needed:</strong> Please specify the exact location for this tournament
+                    </div>
+                </div>
+            `).join('');
+
+            flaggedList.innerHTML = flaggedHTML;
+        }
+
+        // Initialize the app
+        window.addEventListener('load', function() {
+            // Wait for Leaflet to load
+            setTimeout(() => {
+                initMap();
+                
+                // Set up event listeners
+                document.getElementById('ageFilter').addEventListener('change', filterData);
+                document.getElementById('monthFilter').addEventListener('change', filterData);
+                document.getElementById('searchTeam').addEventListener('input', filterData);
+            }, 100);
+        });
+    </script>
+</body>
+</html>
