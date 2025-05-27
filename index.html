@@ -355,6 +355,15 @@
             margin-bottom: 20px;
         }
 
+        .success-box {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            color: #065f46;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
@@ -459,7 +468,9 @@
 
             <div class="teams-list">
                 <h3>Tournament Schedule</h3>
-                <div id="tournamentsList"></div>
+                <div id="tournamentsList">
+                    <p style="text-align: center; color: #6b7280; padding: 20px;">Click "Load Schedule" to load tournament data from Google Sheets.</p>
+                </div>
             </div>
         </div>
 
@@ -472,7 +483,9 @@
             </div>
             <div class="flagged-locations">
                 <h3>Tournaments Requiring Location Clarification</h3>
-                <div id="flaggedList"></div>
+                <div id="flaggedList">
+                    <p style="text-align: center; color: #6b7280; padding: 20px;">Click "Load Schedule" first to see flagged locations.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -485,142 +498,123 @@
         let filteredData = [];
         let flaggedData = [];
 
-        // Sample data based on your CSV structure
-        const sampleTournamentData = [
-            {
-                age: "16u",
-                team: "Evans",
-                date: "5/30",
-                tournament: "Primetime",
-                location: "McHenry, IL",
-                lat: 42.3331,
-                lng: -88.2668
-            },
-            {
-                age: "16u",
-                team: "Hubert",
-                date: "6/5",
-                tournament: "JP Sports Cobras for a Cause",
-                location: "McHenry, IL",
-                lat: 42.3331,
-                lng: -88.2668
-            },
-            {
-                age: "17u",
-                team: "Ankney",
-                date: "6/5",
-                tournament: "Perfect Game Midwest Championship",
-                location: "Marion, IA",
-                lat: 42.0347,
-                lng: -91.5968
-            },
-            {
-                age: "16u",
-                team: "Fraus",
-                date: "6/5",
-                tournament: "Primetime HS TOC",
-                location: "Joliet, IL",
-                lat: 41.5250,
-                lng: -88.0817
-            },
-            {
-                age: "17u",
-                team: "Krebs",
-                date: "6/5",
-                tournament: "Seminole Home Run Classic",
-                location: "Elgin, IL",
-                lat: 42.0354,
-                lng: -88.2826
-            },
-            {
-                age: "15u",
-                team: "Martinez",
-                date: "6/12",
-                tournament: "PBR Rock Summer Championship",
-                location: "Franklin, WI",
-                lat: 42.8858,
-                lng: -88.0387
-            },
-            {
-                age: "16u",
-                team: "Johnson",
-                date: "6/19",
-                tournament: "Primetime Futures",
-                location: "Crystal Lake, IL",
-                lat: 42.2411,
-                lng: -88.2162
-            },
-            {
-                age: "17u",
-                team: "Wilson",
-                date: "6/26",
-                tournament: "PG Great Lakes Championships",
-                location: "West Chicago, IL",
-                lat: 41.8847,
-                lng: -88.2040
-            },
-            {
-                age: "15u",
-                team: "Brown",
-                date: "7/3",
-                tournament: "Seminole HS Hustle",
-                location: "Wheeling, IL",
-                lat: 42.1392,
-                lng: -87.9290
-            },
-            {
-                age: "16u",
-                team: "Davis",
-                date: "7/10",
-                tournament: "PBR Lakepoint Championship",
-                location: "LakePoint Sports Complex, GA",
-                lat: 34.1014,
-                lng: -84.6755
-            },
-            {
-                age: "17u",
-                team: "Miller",
-                date: "7/17",
-                tournament: "Kansas City Summer Classic",
-                location: "Kansas City, MO",
-                lat: 39.0997,
-                lng: -94.5786
-            },
-            {
-                age: "15u",
-                team: "Garcia",
-                date: "7/24",
-                tournament: "Louisville Derby Tournament",
-                location: "Louisville, KY",
-                lat: 38.2527,
-                lng: -85.7585
-            }
-        ];
+        // Location mappings based on your specifications
+        const locationMappings = {
+            'Inwood': 'Joliet, IL',
+            'The Rock': 'Franklin, WI',
+            'KC': 'Kansas City, MO',
+            'KY': 'Louisville, KY',
+            'Lakepoint': 'LakePoint Sports Complex, GA'
+        };
 
-        // Sample flagged data
-        const sampleFlaggedData = [
-            {
-                Age: "16u",
-                Team: "Thompson",
-                Start_1: "6/8",
-                Opponent: "Mystery Tournament",
-                Location: "?"
-            },
-            {
-                Age: "17u",
-                Team: "Anderson",
-                Start_1: "6/15",
-                Opponent: "Local Championship",
-                Location: "Various"
-            },
-            {
-                Age: "15u",
-                Team: "Rodriguez",
-                Start_1: "6/22",
-                Opponent: "Community Cup",
-                Location: "Local"
+        // Flagged locations that need coach input
+        const flaggedLocations = ['?', 'Various', 'Local', 'Inwood?', 'Lakepoint?', 'The Rock?'];
+
+        // City coordinates for mapping
+        const cityCoordinates = {
+            'McHenry, IL': { lat: 42.3331, lng: -88.2668 },
+            'Marion, IA': { lat: 42.0347, lng: -91.5968 },
+            'Joliet, IL': { lat: 41.5250, lng: -88.0817 },
+            'Elgin, IL': { lat: 42.0354, lng: -88.2826 },
+            'Palos Heights, IL': { lat: 41.6689, lng: -87.7967 },
+            'Franklin, WI': { lat: 42.8858, lng: -88.0387 },
+            'Kansas City, MO': { lat: 39.0997, lng: -94.5786 },
+            'Louisville, KY': { lat: 38.2527, lng: -85.7585 },
+            'LakePoint Sports Complex, GA': { lat: 34.1014, lng: -84.6755 },
+            'Crystal Lake, IL': { lat: 42.2411, lng: -88.2162 },
+            'Rockford, IL': { lat: 42.2711, lng: -89.0940 },
+            'West Chicago, IL': { lat: 41.8847, lng: -88.2040 },
+            'Kankakee, IL': { lat: 41.1200, lng: -87.8612 },
+            'Wisconsin Dells, WI': { lat: 43.6275, lng: -89.7710 },
+            'Westfield, IN': { lat: 40.0431, lng: -86.1277 },
+            'Wheeling, IL': { lat: 42.1392, lng: -87.9290 },
+            'Rantoul, IL': { lat: 40.3084, lng: -88.1559 },
+            'Carthage, WI': { lat: 43.0016, lng: -90.1843 },
+            'Kenosha, WI': { lat: 42.5847, lng: -87.8212 },
+            'Evanston, IL': { lat: 42.0451, lng: -87.6877 },
+            'Mauston, WI': { lat: 43.8014, lng: -90.0762 },
+            'Pleasant Prairie, WI': { lat: 42.5531, lng: -87.9334 },
+            'Bradley, IL': { lat: 41.1420, lng: -87.8612 },
+            'New Lenox, IL': { lat: 41.5117, lng: -87.9656 },
+            'Gulf Shores, AL': { lat: 30.2460, lng: -87.7008 },
+            'Vernon Hills, IL': { lat: 42.2131, lng: -87.9612 },
+            'Creekside, MO': { lat: 39.0458, lng: -94.5164 },
+            'Chicagoland': { lat: 41.8781, lng: -87.6298 },
+            'Various': { lat: 41.8781, lng: -87.6298 },
+            'Local': { lat: 41.8781, lng: -87.6298 }
+        };
+
+        // Utility functions - DEFINED FIRST!
+        function showLoading() {
+            const tournamentsList = document.getElementById('tournamentsList');
+            tournamentsList.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading tournament data from Google Sheets...</p>
+                </div>
+            `;
+        }
+
+        function hideLoading() {
+            // Loading will be replaced by updateDisplay
+        }
+
+        function showError(message, type = 'error') {
+            const container = document.querySelector('.container');
+            const existingAlerts = container.querySelectorAll('.alert, .success-box');
+            existingAlerts.forEach(alert => alert.remove());
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = type === 'success' ? 'success-box' : 'alert';
+            errorDiv.innerHTML = type === 'success' ? 
+                `<strong>✅ Success:</strong> ${message}` :
+                `<span class="alert-icon">❌</span><div>${message}</div>`;
+            
+            const header = container.querySelector('.header');
+            header.insertAdjacentElement('afterend', errorDiv);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, type === 'success' ? 5000 : 10000);
+        }
+
+        // Parse CSV data
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            
+            const data = [];
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim()) {
+                    const values = lines[i].split(',');
+                    const row = {};
+                    headers.forEach((header, index) => {
+                        row[header] = values[index] ? values[index].trim() : '';
+                    });
+                    data.push(row);
+                }
             }
-        ];
+            
+            return data;
+        }
+
+        // Get coordinates for a location
+        function getCoordinates(location) {
+            // Direct match
+            if (cityCoordinates[location]) {
+                return cityCoordinates[location];
+            }
+
+            // Partial match
+            for (const [city, coords] of Object.entries(cityCoordinates)) {
+                if (location.toLowerCase().includes(city.toLowerCase().split(',')[0])) {
+                    return coords;
+                }
+            }
+
+            // Default to Chicago area if not found
+            return { lat: 41.8781, lng: -87.6298 };
+        }
 
         // Initialize map
         function initMap() {
@@ -717,8 +711,6 @@
                 console.error('Error loading data:', error);
                 hideLoading();
                 showError('Error loading Google Sheets data: ' + error.message + '. Check console for details.');
-                
-                // Don't fallback to sample data, let user know there's an issue
             }
         }
 
@@ -824,98 +816,4 @@
                             ${group.tournaments.map(t => `
                                 <div style="margin-bottom: 8px; padding: 8px; background: #f8fafc; border-radius: 6px;">
                                     <div style="font-weight: 600; color: #374151;">Coach ${t.team} (${t.age})</div>
-                                    <div style="font-size: 0.9rem; color: #6b7280;">${t.tournament}</div>
-                                    <div style="font-size: 0.8rem; color: #9ca3af;">📅 ${t.date}</div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-                
-                marker.bindPopup(popupContent);
-                markers.push(marker);
-            });
-
-            // Fit map to show all markers
-            if (markers.length > 0) {
-                const group = new L.featureGroup(markers);
-                map.fitBounds(group.getBounds().pad(0.1));
-            }
-        }
-
-        // Update tournaments list
-        function updateTournamentsList() {
-            const tournamentsList = document.getElementById('tournamentsList');
-            
-            if (filteredData.length === 0) {
-                tournamentsList.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 20px;">No tournaments found matching your criteria.</p>';
-                return;
-            }
-
-            // Sort by date
-            const sortedData = [...filteredData].sort((a, b) => {
-                if (!a.date || !b.date) return 0;
-                const [monthA, dayA] = a.date.split('/').map(Number);
-                const [monthB, dayB] = b.date.split('/').map(Number);
-                return monthA !== monthB ? monthA - monthB : dayA - dayB;
-            });
-
-            const tournamentsHTML = sortedData.map(tournament => `
-                <div class="team-item">
-                    <div class="team-header">
-                        <div class="team-name">Coach ${tournament.team}</div>
-                        <div class="age-badge">${tournament.age}</div>
-                    </div>
-                    <div class="tournament-name">${tournament.tournament}</div>
-                    <div class="team-details">
-                        📍 ${tournament.location}<br>
-                        📅 ${tournament.date}
-                    </div>
-                </div>
-            `).join('');
-
-            tournamentsList.innerHTML = tournamentsHTML;
-        }
-
-        // Update flagged locations list
-        function updateFlaggedList() {
-            const flaggedList = document.getElementById('flaggedList');
-            
-            if (flaggedData.length === 0) {
-                flaggedList.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 20px;">All locations have been clarified! 🎉</p>';
-                return;
-            }
-
-            const flaggedHTML = flaggedData.map(item => `
-                <div class="flagged-item">
-                    <div class="flagged-header">
-                        <span>⚠️</span>
-                        Coach ${item.Team} (${item.Age}) - ${item.Opponent}
-                    </div>
-                    <div class="flagged-details">
-                        <strong>Current Location:</strong> "${item.Location}"<br>
-                        <strong>Date:</strong> ${item.Start_1}<br>
-                        <strong>Action Needed:</strong> Please specify the exact location for this tournament
-                    </div>
-                </div>
-            `).join('');
-
-            flaggedList.innerHTML = flaggedHTML;
-        }
-
-        // Initialize the app
-        window.addEventListener('load', function() {
-            // Wait for Leaflet to load
-            setTimeout(() => {
-                initMap();
-                // Don't auto-load data, wait for user to click "Load Schedule"
-                
-                // Set up event listeners
-                document.getElementById('ageFilter').addEventListener('change', filterData);
-                document.getElementById('monthFilter').addEventListener('change', filterData);
-                document.getElementById('searchTeam').addEventListener('input', filterData);
-            }, 100);
-        });
-    </script>
-</body>
-</html>
+                                    <div style="font-size: 0.9rem; color: #6b7280;"
