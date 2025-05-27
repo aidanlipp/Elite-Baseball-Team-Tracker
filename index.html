@@ -447,32 +447,8 @@
                         </select>
                     </div>
                     <div class="input-group">
-                        <label for="monthFilter">Filter by Month</label>
-                        <select id="monthFilter">
-                            <option value="">All Months</option>
-                            <option value="5">May</option>
-                            <option value="6">June</option>
-                            <option value="7">July</option>
-                            <option value="8">August</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
                         <label for="specificDate">Find Teams on Specific Date</label>
                         <input type="date" id="specificDate" onchange="filterBySpecificDate()">
-                    </div>
-                </div>
-                <div class="control-group">
-                    <div class="input-group">
-                        <label for="searchTeam">Search Coach/Tournament</label>
-                        <input type="text" id="searchTeam" placeholder="Enter coach name or tournament">
-                    </div>
-                    <div class="input-group">
-                        <label for="dateRangeStart">Tournament Date Range</label>
-                        <div class="date-range-container">
-                            <input type="date" id="dateRangeStart" style="flex: 1;" onchange="filterByDateRange()">
-                            <span style="color: #6b7280;">to</span>
-                            <input type="date" id="dateRangeEnd" style="flex: 1;" onchange="filterByDateRange()">
-                        </div>
                     </div>
                     <div class="input-group">
                         <label for="quickDateFilter">Quick Date Filters</label>
@@ -484,6 +460,12 @@
                             <option value="nextWeek">Next Week</option>
                             <option value="thisMonth">This Month</option>
                         </select>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="input-group">
+                        <label for="searchTeam">Search Coach/Tournament</label>
+                        <input type="text" id="searchTeam" placeholder="Enter coach name or tournament">
                     </div>
                 </div>
                 <div class="button-group">
@@ -793,11 +775,15 @@
                     // Get coordinates
                     const coords = getCoordinates(location);
 
+                    // Create proper date range from Start/Start_1 and End/End_1
+                    const dateRange = createTournamentDateRange(row);
+
                     return {
                         age: row.Age || '',
                         team: row.Team || '',
-                        date: row.Start_1 || '',
-                        endDate: row.End_1 || '',
+                        startDate: dateRange.startDate,
+                        endDate: dateRange.endDate,
+                        dateRange: dateRange.displayRange,
                         tournament: row.Opponent || '',
                         location: location,
                         originalLocation: row.Location || '',
@@ -825,24 +811,16 @@
         // Filter data
         function filterData() {
             const ageFilter = document.getElementById('ageFilter').value;
-            const monthFilter = document.getElementById('monthFilter').value;
             const searchTerm = document.getElementById('searchTeam').value.toLowerCase();
 
             filteredData = tournamentsData.filter(tournament => {
                 const matchesAge = !ageFilter || tournament.age === ageFilter;
-                
-                let matchesMonth = true;
-                if (monthFilter && tournament.date) {
-                    const dateMonth = tournament.date.split('/')[0];
-                    matchesMonth = dateMonth === monthFilter;
-                }
-
                 const matchesSearch = !searchTerm || 
                     tournament.team.toLowerCase().includes(searchTerm) ||
                     tournament.tournament.toLowerCase().includes(searchTerm) ||
                     tournament.location.toLowerCase().includes(searchTerm);
 
-                return matchesAge && matchesMonth && matchesSearch;
+                return matchesAge && matchesSearch;
             });
 
             updateDisplay();
@@ -851,11 +829,8 @@
         // Clear all filters
         function clearAllFilters() {
             document.getElementById('ageFilter').value = '';
-            document.getElementById('monthFilter').value = '';
             document.getElementById('searchTeam').value = '';
             document.getElementById('specificDate').value = '';
-            document.getElementById('dateRangeStart').value = '';
-            document.getElementById('dateRangeEnd').value = '';
             document.getElementById('quickDateFilter').value = '';
             document.getElementById('activeDateInfo').innerHTML = '';
             filteredData = [...tournamentsData];
@@ -930,7 +905,7 @@
                                 <div style="margin-bottom: 8px; padding: 8px; background: #f8fafc; border-radius: 6px;">
                                     <div style="font-weight: 600; color: #374151;">Coach ${t.team} (${t.age})</div>
                                     <div style="font-size: 0.9rem; color: #6b7280;">${t.tournament}</div>
-                                    <div style="font-size: 0.8rem; color: #9ca3af;">📅 ${t.date}${t.endDate && t.endDate !== t.date ? ` - ${t.endDate}` : ''}</div>
+                                    <div style="font-size: 0.8rem; color: #9ca3af;">📅 ${t.dateRange}</div>
                                 </div>
                             `).join('')}
                         </div>
@@ -957,11 +932,11 @@
                 return;
             }
 
-            // Sort by date
+            // Sort by start date
             const sortedData = [...filteredData].sort((a, b) => {
-                if (!a.date || !b.date) return 0;
-                const [monthA, dayA] = a.date.split('/').map(Number);
-                const [monthB, dayB] = b.date.split('/').map(Number);
+                if (!a.startDate || !b.startDate) return 0;
+                const [monthA, dayA] = a.startDate.split('/').map(Number);
+                const [monthB, dayB] = b.startDate.split('/').map(Number);
                 return monthA !== monthB ? monthA - monthB : dayA - dayB;
             });
 
@@ -974,7 +949,7 @@
                     <div class="tournament-name">${tournament.tournament}</div>
                     <div class="team-details">
                         📍 ${tournament.location}<br>
-                        📅 ${tournament.date}${tournament.endDate && tournament.endDate !== tournament.date ? ` - ${tournament.endDate}` : ''}
+                        📅 ${tournament.dateRange}
                         ${tournament.time ? `<br>⏰ ${tournament.time}` : ''}
                     </div>
                 </div>
@@ -1017,7 +992,6 @@
                 
                 // Set up event listeners
                 document.getElementById('ageFilter').addEventListener('change', filterData);
-                document.getElementById('monthFilter').addEventListener('change', filterData);
                 document.getElementById('searchTeam').addEventListener('input', filterData);
             }, 100);
         });
