@@ -610,33 +610,60 @@
 
         // Create full tournament date range from Start/Start_1 and End/End_1 columns
         function createTournamentDateRange(row) {
-            // Build start date from Start_1 (primary date field)
+            console.log('Processing row for:', row.Team); // Debug log
+            
+            // The actual date is in Start_1 (second Start column) like "5/27"
             let startDateStr = '';
-            if (row.Start_1) {
-                startDateStr = row.Start_1;
+            if (row.Start_1 && row.Start_1.trim() !== '') {
+                startDateStr = row.Start_1.trim();
             }
 
-            // Build end date from End_1 (or use start date if no end date)
+            // The end date is in End_1 (second End column) 
             let endDateStr = '';
             if (row.End_1 && row.End_1.trim() !== '') {
-                endDateStr = row.End_1;
+                endDateStr = row.End_1.trim();
             } else {
                 endDateStr = startDateStr; // Single day tournament
             }
+
+            // Convert from M/D format to MM/DD format for consistency
+            if (startDateStr) {
+                startDateStr = formatDateString(startDateStr);
+            }
+            if (endDateStr) {
+                endDateStr = formatDateString(endDateStr);
+            }
+
+            console.log(`Date range for ${row.Team}: start=${startDateStr}, end=${endDateStr}`); // Debug log
 
             return {
                 startDate: startDateStr,
                 endDate: endDateStr,
                 displayRange: startDateStr && endDateStr && startDateStr !== endDateStr 
                     ? `${startDateStr} - ${endDateStr}` 
-                    : startDateStr
+                    : startDateStr || 'No date'
             };
+        }
+
+        // Format date string to ensure MM/DD format
+        function formatDateString(dateStr) {
+            if (!dateStr) return '';
+            
+            const parts = dateStr.split('/');
+            if (parts.length !== 2) return dateStr;
+            
+            const month = parts[0].padStart(2, '0');
+            const day = parts[1].padStart(2, '0');
+            
+            return `${month}/${day}`;
         }
 
         // Parse CSV data
         function parseCSV(csvText) {
             const lines = csvText.split('\n');
             const headers = lines[0].split(',').map(h => h.trim());
+            
+            console.log('CSV Headers found:', headers); // Debug log
             
             const data = [];
             for (let i = 1; i < lines.length; i++) {
@@ -650,6 +677,7 @@
                 }
             }
             
+            console.log('Sample parsed row:', data[0]); // Debug log
             return data;
         }
 
