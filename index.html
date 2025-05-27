@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Your existing CSS styles */
         * {
             margin: 0;
             padding: 0;
@@ -486,69 +485,142 @@
         let filteredData = [];
         let flaggedData = [];
 
-        // Define your Google Sheet ID and API Key here
-        // IMPORTANT: Replace 'YOUR_GENERATED_API_KEY' with your actual API key
-        const GOOGLE_SHEET_ID = '1_f1JKSRFNjTrNFBWRW9hYUllgVlezOzHoedxzDWOnys'; // Your Sheet ID
-        const GOOGLE_API_KEY = 'AIzaSyCYHGQaKE3vbFCv-Sqpnlec3YOP45klzkk'; // <--- **INSERT YOUR API KEY HERE**
-
-        // Define which sheet tab to read and the range of columns
-        const SHEET_NAME = 'Copy of HS'; // <--- **Updated to "Copy of HS"**
-        const SHEET_RANGE = 'A:G'; // Adjust this range to cover all your data columns (e.g., if you have columns A to Z, use 'A:Z')
-
-        // Flagged locations that require clarification
-        const flaggedLocations = ["?", "Various", "Local", "TBD"];
-
-        // Location mappings for common shorthand or known places
-        const locationMappings = {
-            "McHenry, IL": "McHenry, IL",
-            "Marion, IA": "Marion, IA",
-            "Joliet, IL": "Joliet, IL",
-            "Elgin, IL": "Elgin, IL",
-            "Franklin, WI": "Franklin, WI",
-            "Crystal Lake, IL": "Crystal Lake, IL",
-            "West Chicago, IL": "West Chicago, IL",
-            "Wheeling, IL": "Wheeling, IL",
-            "LakePoint Sports Complex, GA": "Emerson, GA", // More precise location for LakePoint
-            "Kansas City, MO": "Kansas City, MO",
-            "Louisville, KY": "Louisville, KY",
-            // Add more mappings as needed
-            "St. Louis, MO": "St. Louis, MO",
-            "Indianapolis, IN": "Indianapolis, IN",
-            "Milwaukee, WI": "Milwaukee, WI"
-        };
-
-        // Geocoding cache to store coordinates for locations
-        const geocodingCache = {};
-
-        // Function to get coordinates for a given location using Nominatim (OpenStreetMap)
-        async function getCoordinates(location) {
-            if (geocodingCache[location]) {
-                return geocodingCache[location];
+        // Sample data based on your CSV structure
+        const sampleTournamentData = [
+            {
+                age: "16u",
+                team: "Evans",
+                date: "5/30",
+                tournament: "Primetime",
+                location: "McHenry, IL",
+                lat: 42.3331,
+                lng: -88.2668
+            },
+            {
+                age: "16u",
+                team: "Hubert",
+                date: "6/5",
+                tournament: "JP Sports Cobras for a Cause",
+                location: "McHenry, IL",
+                lat: 42.3331,
+                lng: -88.2668
+            },
+            {
+                age: "17u",
+                team: "Ankney",
+                date: "6/5",
+                tournament: "Perfect Game Midwest Championship",
+                location: "Marion, IA",
+                lat: 42.0347,
+                lng: -91.5968
+            },
+            {
+                age: "16u",
+                team: "Fraus",
+                date: "6/5",
+                tournament: "Primetime HS TOC",
+                location: "Joliet, IL",
+                lat: 41.5250,
+                lng: -88.0817
+            },
+            {
+                age: "17u",
+                team: "Krebs",
+                date: "6/5",
+                tournament: "Seminole Home Run Classic",
+                location: "Elgin, IL",
+                lat: 42.0354,
+                lng: -88.2826
+            },
+            {
+                age: "15u",
+                team: "Martinez",
+                date: "6/12",
+                tournament: "PBR Rock Summer Championship",
+                location: "Franklin, WI",
+                lat: 42.8858,
+                lng: -88.0387
+            },
+            {
+                age: "16u",
+                team: "Johnson",
+                date: "6/19",
+                tournament: "Primetime Futures",
+                location: "Crystal Lake, IL",
+                lat: 42.2411,
+                lng: -88.2162
+            },
+            {
+                age: "17u",
+                team: "Wilson",
+                date: "6/26",
+                tournament: "PG Great Lakes Championships",
+                location: "West Chicago, IL",
+                lat: 41.8847,
+                lng: -88.2040
+            },
+            {
+                age: "15u",
+                team: "Brown",
+                date: "7/3",
+                tournament: "Seminole HS Hustle",
+                location: "Wheeling, IL",
+                lat: 42.1392,
+                lng: -87.9290
+            },
+            {
+                age: "16u",
+                team: "Davis",
+                date: "7/10",
+                tournament: "PBR Lakepoint Championship",
+                location: "LakePoint Sports Complex, GA",
+                lat: 34.1014,
+                lng: -84.6755
+            },
+            {
+                age: "17u",
+                team: "Miller",
+                date: "7/17",
+                tournament: "Kansas City Summer Classic",
+                location: "Kansas City, MO",
+                lat: 39.0997,
+                lng: -94.5786
+            },
+            {
+                age: "15u",
+                team: "Garcia",
+                date: "7/24",
+                tournament: "Louisville Derby Tournament",
+                location: "Louisville, KY",
+                lat: 38.2527,
+                lng: -85.7585
             }
+        ];
 
-            if (!location || location.trim() === '') {
-                console.warn(`Attempted to geocode an empty location.`);
-                return { lat: 0, lng: 0 }; // Default to 0,0 or handle as an error
+        // Sample flagged data
+        const sampleFlaggedData = [
+            {
+                Age: "16u",
+                Team: "Thompson",
+                Start_1: "6/8",
+                Opponent: "Mystery Tournament",
+                Location: "?"
+            },
+            {
+                Age: "17u",
+                Team: "Anderson",
+                Start_1: "6/15",
+                Opponent: "Local Championship",
+                Location: "Various"
+            },
+            {
+                Age: "15u",
+                Team: "Rodriguez",
+                Start_1: "6/22",
+                Opponent: "Community Cup",
+                Location: "Local"
             }
-
-            const apiUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`;
-            try {
-                const response = await fetch(apiUrl);
-                const data = await response.json();
-
-                if (data && data.length > 0) {
-                    const coords = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-                    geocodingCache[location] = coords; // Store in cache
-                    return coords;
-                } else {
-                    console.warn(`Could not find coordinates for: ${location}.`);
-                    return { lat: 0, lng: 0 }; // Default to 0,0 or handle as an error
-                }
-            } catch (error) {
-                console.error(`Error geocoding ${location}:`, error);
-                return { lat: 0, lng: 0 }; // Default to 0,0 on error
-            }
-        }
+        ];
 
         // Initialize map
         function initMap() {
@@ -558,104 +630,57 @@
                 return;
             }
 
-            map = L.map('map').setView([41.8781, -87.6298], 6); // Centered on Chicago, adjusted zoom level
+            map = L.map('map').setView([41.8781, -87.6298], 6);
             
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
         }
 
-        // Function to show loading spinner
-        function showLoading() {
-            const mapDiv = document.getElementById('map');
-            mapDiv.innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading data...</div></div>';
-            document.getElementById('tournamentsList').innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading data...</div></div>';
-            document.getElementById('flaggedList').innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading data...</div></div>';
-        }
-
-        // Function to hide loading spinner
-        function hideLoading() {
-            // The content will be replaced by updateMapMarkers, updateTournamentsList, etc.
-            // No explicit 'hide' needed if content is dynamically rendered.
-        }
-
-        // Function to display errors or success messages
-        function showError(message, type = 'error') {
-            const infoBox = document.querySelector('.info-box');
-            infoBox.style.display = 'block';
-            if (type === 'error') {
-                infoBox.style.backgroundColor = 'rgba(255, 99, 71, 0.1)'; // Tomato Red
-                infoBox.style.borderColor = '#ff6347';
-                infoBox.style.color = '#cc0000';
-                infoBox.innerHTML = `<strong>Error:</strong> ${message}`;
-            } else { // success
-                infoBox.style.backgroundColor = 'rgba(144, 238, 144, 0.1)'; // Light Green
-                infoBox.style.borderColor = '#90ee90';
-                infoBox.style.color = '#006400';
-                infoBox.innerHTML = `<strong>Success:</strong> ${message}`;
-            }
-            // Hide the message after a few seconds
-            setTimeout(() => {
-                infoBox.style.display = 'none';
-            }, 5000);
-        }
-
-        // Load data from Google Sheets API
+        // Load data from Google Sheets
         async function loadData() {
-            console.log('Loading data from Google Sheets API...');
+            console.log('Loading data from Google Sheets...');
             showLoading();
             
-            const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEET_ID}/values/${SHEET_NAME}!${SHEET_RANGE}?key=${GOOGLE_API_KEY}`;
-            console.log('Fetching from API URL:', apiUrl);
-            
             try {
-                const response = await fetch(apiUrl);
+                // Your Google Sheet ID
+                const sheetId = '1_f1JKSRFNjTrNFBWRW9hYUllgVlezOzHoedxzDWOnys';
+                const gid = '473783352'; // Your specific sheet tab
+                
+                // Convert to CSV export URL
+                const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+                console.log('Fetching from URL:', csvUrl);
+                
+                const response = await fetch(csvUrl);
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: Failed to fetch data. Response: ${errorText}`);
+                    throw new Error(`HTTP ${response.status}: Failed to fetch data from Google Sheets`);
                 }
 
-                const data = await response.json();
-                const rows = data.values;
-
-                if (!rows || rows.length === 0) {
-                    showError('No data found in the specified Google Sheet range.');
-                    hideLoading();
-                    return;
-                }
-
-                // Assuming the first row is your header
-                const headers = rows[0];
-                const rawParsedData = rows.slice(1).map(row => {
-                    let obj = {};
-                    headers.forEach((header, index) => {
-                        obj[header] = row[index];
-                    });
-                    return obj;
-                });
-
-                console.log('Raw parsed data entries:', rawParsedData.length);
+                const csvText = await response.text();
+                console.log('CSV data received, length:', csvText.length);
+                
+                const parsedData = parseCSV(csvText);
+                console.log('Parsed data entries:', parsedData.length);
                 
                 // Filter out NPU Practice and process tournament data
-                const tournamentEntries = rawParsedData.filter(row =>
+                const tournamentEntries = parsedData.filter(row => 
                     row.Opponent && !row.Opponent.includes('NPU Practice') && row.Opponent.trim() !== ''
                 );
                 console.log('Tournament entries (excluding NPU Practice):', tournamentEntries.length);
 
                 // Separate flagged and regular tournaments
-                flaggedData = tournamentEntries.filter(row =>
+                flaggedData = tournamentEntries.filter(row => 
                     flaggedLocations.includes(row.Location)
                 );
                 console.log('Flagged entries:', flaggedData.length);
 
-                const regularTournaments = tournamentEntries.filter(row =>
+                const regularTournaments = tournamentEntries.filter(row => 
                     !flaggedLocations.includes(row.Location)
                 );
-                console.log('Regular tournaments (pre-geocode):', regularTournaments.length);
+                console.log('Regular tournaments:', regularTournaments.length);
 
-                // Process regular tournaments and get coordinates
-                tournamentsData = [];
-                for (const row of regularTournaments) {
+                // Process regular tournaments
+                tournamentsData = regularTournaments.map(row => {
                     let location = row.Location || '';
                     
                     // Apply location mappings
@@ -664,9 +689,9 @@
                     }
 
                     // Get coordinates
-                    const coords = await getCoordinates(location); // Await geocoding
+                    const coords = getCoordinates(location);
 
-                    tournamentsData.push({
+                    return {
                         age: row.Age || '',
                         team: row.Team || '',
                         date: row.Start_1 || '',
@@ -677,11 +702,11 @@
                         time: row.Time || '',
                         lat: coords.lat,
                         lng: coords.lng
-                    });
-                }
+                    };
+                });
 
                 filteredData = [...tournamentsData];
-                console.log('Processed tournaments (after geocoding):', tournamentsData.length);
+                console.log('Processed tournaments:', tournamentsData.length);
                 
                 updateDisplay();
                 hideLoading();
@@ -691,7 +716,9 @@
             } catch (error) {
                 console.error('Error loading data:', error);
                 hideLoading();
-                showError('Error loading Google Sheets data: ' + error.message + '. Please check your API key, Sheet ID, and sheet sharing settings.');
+                showError('Error loading Google Sheets data: ' + error.message + '. Check console for details.');
+                
+                // Don't fallback to sample data, let user know there's an issue
             }
         }
 
@@ -702,17 +729,12 @@
             const searchTerm = document.getElementById('searchTeam').value.toLowerCase();
 
             filteredData = tournamentsData.filter(tournament => {
-                const matchesAge = !ageFilter || tournament.age.toLowerCase() === ageFilter.toLowerCase();
+                const matchesAge = !ageFilter || tournament.age === ageFilter;
                 
                 let matchesMonth = true;
                 if (monthFilter && tournament.date) {
-                    const dateParts = tournament.date.split('/');
-                    if (dateParts.length > 0) {
-                        const dateMonth = dateParts[0];
-                        matchesMonth = dateMonth === monthFilter;
-                    } else {
-                        matchesMonth = false; // Invalid date format
-                    }
+                    const dateMonth = tournament.date.split('/')[0];
+                    matchesMonth = dateMonth === monthFilter;
                 }
 
                 const matchesSearch = !searchTerm || 
@@ -770,11 +792,7 @@
 
         // Update map markers
         function updateMapMarkers() {
-            if (!map) {
-                // If map not initialized, try to re-initialize it
-                initMap();
-                if (!map) return; // If still not initialized, something is wrong
-            }
+            if (!map) return;
 
             // Clear existing markers
             markers.forEach(marker => map.removeLayer(marker));
@@ -783,19 +801,16 @@
             // Group tournaments by location for better display
             const locationGroups = {};
             filteredData.forEach(tournament => {
-                // Only add markers for locations with valid coordinates
-                if (tournament.lat && tournament.lng && tournament.lat !== 0 && tournament.lng !== 0) {
-                    const key = `${tournament.lat},${tournament.lng}`;
-                    if (!locationGroups[key]) {
-                        locationGroups[key] = {
-                            location: tournament.location,
-                            lat: tournament.lat,
-                            lng: tournament.lng,
-                            tournaments: []
-                        };
-                    }
-                    locationGroups[key].tournaments.push(tournament);
+                const key = `${tournament.lat},${tournament.lng}`;
+                if (!locationGroups[key]) {
+                    locationGroups[key] = {
+                        location: tournament.location,
+                        lat: tournament.lat,
+                        lng: tournament.lng,
+                        tournaments: []
+                    };
                 }
+                locationGroups[key].tournaments.push(tournament);
             });
 
             // Add markers for each location group
@@ -825,9 +840,6 @@
             if (markers.length > 0) {
                 const group = new L.featureGroup(markers);
                 map.fitBounds(group.getBounds().pad(0.1));
-            } else {
-                // If no markers, reset view to a default location (e.g., Chicago)
-                map.setView([41.8781, -87.6298], 6);
             }
         }
 
@@ -843,13 +855,9 @@
             // Sort by date
             const sortedData = [...filteredData].sort((a, b) => {
                 if (!a.date || !b.date) return 0;
-                // Parse date strings like "5/30" to Date objects for proper sorting
                 const [monthA, dayA] = a.date.split('/').map(Number);
                 const [monthB, dayB] = b.date.split('/').map(Number);
-                // Assuming current year for comparison, or add year if available in data
-                const dateA = new Date(new Date().getFullYear(), monthA - 1, dayA);
-                const dateB = new Date(new Date().getFullYear(), monthB - 1, dayB);
-                return dateA - dateB;
+                return monthA !== monthB ? monthA - monthB : dayA - dayB;
             });
 
             const tournamentsHTML = sortedData.map(tournament => `
@@ -897,8 +905,11 @@
 
         // Initialize the app
         window.addEventListener('load', function() {
+            // Wait for Leaflet to load
             setTimeout(() => {
                 initMap();
+                // Don't auto-load data, wait for user to click "Load Schedule"
+                
                 // Set up event listeners
                 document.getElementById('ageFilter').addEventListener('change', filterData);
                 document.getElementById('monthFilter').addEventListener('change', filterData);
