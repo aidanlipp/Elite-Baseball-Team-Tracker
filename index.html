@@ -374,12 +374,6 @@
             font-weight: 500;
         }
 
-        .date-range-container {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
@@ -409,11 +403,6 @@
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 8px;
-            }
-
-            .date-range-container {
-                flex-direction: column;
-                gap: 5px;
             }
         }
     </style>
@@ -574,7 +563,7 @@
             'Local': { lat: 41.8781, lng: -87.6298 }
         };
 
-        // Utility functions
+        // UTILITY FUNCTIONS - DEFINED FIRST
         function showLoading() {
             const tournamentsList = document.getElementById('tournamentsList');
             tournamentsList.innerHTML = `
@@ -619,53 +608,29 @@
             return new Date(currentYear, month, day);
         }
 
-        // Check if a date falls within a tournament's date range
-        function isDateInTournamentRange(checkDate, tournament) {
-            if (!checkDate || !tournament.date) return false;
-            
-            const startDate = parseDate(tournament.date);
-            if (!startDate) return false;
-            
-            // If there's an end date, use it; otherwise, assume single day
-            const endDate = tournament.endDate && tournament.endDate !== tournament.date 
-                ? parseDate(tournament.endDate) 
-                : startDate;
-            
-            return checkDate >= startDate && checkDate <= endDate;
-        }
-
-        // Filter by specific date
-        function filterBySpecificDate() {
-            const specificDateStr = document.getElementById('specificDate').value;
-            if (!specificDateStr) {
-                // If no date selected, apply regular filters
-                filterData();
-                document.getElementById('activeDateInfo').innerHTML = '';
-                return;
+        // Create full tournament date range from Start/Start_1 and End/End_1 columns
+        function createTournamentDateRange(row) {
+            // Build start date from Start_1 (primary date field)
+            let startDateStr = '';
+            if (row.Start_1) {
+                startDateStr = row.Start_1;
             }
-            
-            const specificDate = new Date(specificDateStr);
-            
-            // Filter tournaments that are active on this specific date
-            const tournamentsOnDate = tournamentsData.filter(tournament => 
-                isDateInTournamentRange(specificDate, tournament)
-            );
-            
-            // Apply other filters on top of date filter
-            const ageFilter = document.getElementById('ageFilter').value;
-            const searchTerm = document.getElementById('searchTeam').value.toLowerCase();
-            
-            filteredData = tournamentsOnDate.filter(tournament => {
-                const matchesAge = !ageFilter || tournament.age === ageFilter;
-                const matchesSearch = !searchTerm || 
-                    tournament.team.toLowerCase().includes(searchTerm) ||
-                    tournament.tournament.toLowerCase().includes(searchTerm) ||
-                    tournament.location.toLowerCase().includes(searchTerm);
-                
-                return inRange && matchesAge && matchesSearch;
-            });
-            
-            updateDisplay();
+
+            // Build end date from End_1 (or use start date if no end date)
+            let endDateStr = '';
+            if (row.End_1 && row.End_1.trim() !== '') {
+                endDateStr = row.End_1;
+            } else {
+                endDateStr = startDateStr; // Single day tournament
+            }
+
+            return {
+                startDate: startDateStr,
+                endDate: endDateStr,
+                displayRange: startDateStr && endDateStr && startDateStr !== endDateStr 
+                    ? `${startDateStr} - ${endDateStr}` 
+                    : startDateStr
+            };
         }
 
         // Parse CSV data
@@ -704,6 +669,19 @@
 
             // Default to Chicago area if not found
             return { lat: 41.8781, lng: -87.6298 };
+        }
+
+        // Check if a date falls within a tournament's date range
+        function isDateInTournamentRange(checkDate, tournament) {
+            if (!checkDate || !tournament.startDate) return false;
+            
+            const startDate = parseDate(tournament.startDate);
+            const endDate = parseDate(tournament.endDate);
+            
+            if (!startDate) return false;
+            if (!endDate) return checkDate.toDateString() === startDate.toDateString();
+            
+            return checkDate >= startDate && checkDate <= endDate;
         }
 
         // Initialize map
@@ -806,6 +784,133 @@
                 hideLoading();
                 showError('Error loading Google Sheets data: ' + error.message + '. Check console for details.');
             }
+        }
+
+        // Filter by specific date
+        function filterBySpecificDate() {
+            const specificDateStr = document.getElementById('specificDate').value;
+            if (!specificDateStr) {
+                // If no date selected, apply regular filters
+                filterData();
+                document.getElementById('activeDateInfo').innerHTML = '';
+                return;
+            }
+            
+            const specificDate = new Date(specificDateStr);
+            
+            // Filter tournaments that are active on this specific date
+            const tournamentsOnDate = tournamentsData.filter(tournament => 
+                isDateInTournamentRange(specificDate, tournament)
+            );
+            
+            // Apply other filters on top of date filter
+            const ageFilter = document.getElementById('ageFilter').value;
+            const searchTerm = document.getElementById('searchTeam').value.toLowerCase();
+            
+            filteredData = tournamentsOnDate.filter(tournament => {
+                const matchesAge = !ageFilter || tournament.age === ageFilter;
+                const matchesSearch = !searchTerm || 
+                    tournament.team.toLowerCase().includes(searchTerm) ||
+                    tournament.tournament.toLowerCase().includes(searchTerm) ||
+                    tournament.location.toLowerCase().includes(searchTerm);
+                
+                return matchesAge && matchesSearch;
+            });
+            
+            // Show active date info
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const formattedDate = specificDate.toLocaleDateString('en-US', dateOptions);
+            
+            document.getElementById('activeDateInfo').innerHTML = `
+                <div class="active-date-info">
+                    <strong>📅 Showing teams competing on ${formattedDate}</strong><br>
+                    Found ${filteredData.length} teams at ${new Set(filteredData.map(t => t.location)).size} locations
+                </div>
+            `;
+            
+            updateDisplay();
+        }
+
+        // Quick date filter options
+        function applyQuickDateFilter() {
+            const quickFilter = document.getElementById('quickDateFilter').value;
+            const today = new Date();
+            
+            // Clear other date inputs
+            document.getElementById('specificDate').value = '';
+            document.getElementById('activeDateInfo').innerHTML = '';
+            
+            let startDate, endDate;
+            let filterName = '';
+            
+            switch(quickFilter) {
+                case 'today':
+                    startDate = endDate = today;
+                    filterName = 'Today';
+                    break;
+                case 'tomorrow':
+                    const tomorrow = new Date(today);
+                    tomorrow.setDate(today.getDate() + 1);
+                    startDate = endDate = tomorrow;
+                    filterName = 'Tomorrow';
+                    break;
+                case 'thisWeek':
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - today.getDay()); // Start of week (Sunday)
+                    endDate = new Date(startDate);
+                    endDate.setDate(startDate.getDate() + 6); // End of week (Saturday)
+                    filterName = 'This Week';
+                    break;
+                case 'nextWeek':
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - today.getDay() + 7); // Start of next week
+                    endDate = new Date(startDate);
+                    endDate.setDate(startDate.getDate() + 6); // End of next week
+                    filterName = 'Next Week';
+                    break;
+                case 'thisMonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                    filterName = 'This Month';
+                    break;
+                default:
+                    filterData();
+                    return;
+            }
+            
+            // Filter tournaments in the selected period
+            filteredData = tournamentsData.filter(tournament => {
+                const tournamentStart = parseDate(tournament.startDate);
+                const tournamentEnd = parseDate(tournament.endDate);
+                
+                if (!tournamentStart) return false;
+                
+                // Check if tournament overlaps with selected period
+                const actualEndDate = tournamentEnd || tournamentStart;
+                let inRange = tournamentStart <= endDate && actualEndDate >= startDate;
+                
+                // Apply other filters
+                const ageFilter = document.getElementById('ageFilter').value;
+                const searchTerm = document.getElementById('searchTeam').value.toLowerCase();
+                
+                const matchesAge = !ageFilter || tournament.age === ageFilter;
+                const matchesSearch = !searchTerm || 
+                    tournament.team.toLowerCase().includes(searchTerm) ||
+                    tournament.tournament.toLowerCase().includes(searchTerm) ||
+                    tournament.location.toLowerCase().includes(searchTerm);
+                
+                return inRange && matchesAge && matchesSearch;
+            });
+            
+            // Show filter info
+            document.getElementById('activeDateInfo').innerHTML = `
+                <div class="active-date-info">
+                    <strong>📅 Showing tournaments for ${filterName}</strong><br>
+                    Found ${filteredData.length} teams at ${new Set(filteredData.map(t => t.location)).size} locations
+                </div>
+            `;
+            
+            updateDisplay();
         }
 
         // Filter data
@@ -997,128 +1102,4 @@
         });
     </script>
 </body>
-</html>Filter;
-                const matchesSearch = !searchTerm || 
-                    tournament.team.toLowerCase().includes(searchTerm) ||
-                    tournament.tournament.toLowerCase().includes(searchTerm) ||
-                    tournament.location.toLowerCase().includes(searchTerm);
-                
-                return matchesAge && matchesSearch;
-            });
-            
-            // Show active date info
-            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            const formattedDate = specificDate.toLocaleDateString('en-US', dateOptions);
-            
-            document.getElementById('activeDateInfo').innerHTML = `
-                <div class="active-date-info">
-                    <strong>📅 Showing teams competing on ${formattedDate}</strong><br>
-                    Found ${filteredData.length} teams at ${new Set(filteredData.map(t => t.location)).size} locations
-                </div>
-            `;
-            
-            updateDisplay();
-        }
-
-        // Filter by date range
-        function filterByDateRange() {
-            const startDateStr = document.getElementById('dateRangeStart').value;
-            const endDateStr = document.getElementById('dateRangeEnd').value;
-            
-            if (!startDateStr && !endDateStr) {
-                filterData();
-                return;
-            }
-            
-            const startDate = startDateStr ? new Date(startDateStr) : null;
-            const endDate = endDateStr ? new Date(endDateStr) : null;
-            
-            filteredData = tournamentsData.filter(tournament => {
-                const tournamentStart = parseDate(tournament.date);
-                const tournamentEnd = tournament.endDate && tournament.endDate !== tournament.date 
-                    ? parseDate(tournament.endDate) 
-                    : tournamentStart;
-                
-                if (!tournamentStart) return false;
-                
-                // Check if tournament overlaps with selected range
-                let inRange = true;
-                if (startDate && tournamentEnd < startDate) inRange = false;
-                if (endDate && tournamentStart > endDate) inRange = false;
-                
-                // Apply other filters
-                const ageFilter = document.getElementById('ageFilter').value;
-                const searchTerm = document.getElementById('searchTeam').value.toLowerCase();
-                
-                const matchesAge = !ageFilter || tournament.age === ageFilter;
-                const matchesSearch = !searchTerm || 
-                    tournament.team.toLowerCase().includes(searchTerm) ||
-                    tournament.tournament.toLowerCase().includes(searchTerm) ||
-                    tournament.location.toLowerCase().includes(searchTerm);
-                
-                return inRange && matchesAge && matchesSearch;
-            });
-            
-            updateDisplay();
-        }
-
-        // Quick date filter options
-        function applyQuickDateFilter() {
-            const quickFilter = document.getElementById('quickDateFilter').value;
-            const today = new Date();
-            
-            // Clear other date inputs
-            document.getElementById('specificDate').value = '';
-            document.getElementById('dateRangeStart').value = '';
-            document.getElementById('dateRangeEnd').value = '';
-            document.getElementById('activeDateInfo').innerHTML = '';
-            
-            let startDate, endDate;
-            
-            switch(quickFilter) {
-                case 'today':
-                    startDate = endDate = today;
-                    break;
-                case 'tomorrow':
-                    const tomorrow = new Date(today);
-                    tomorrow.setDate(today.getDate() + 1);
-                    startDate = endDate = tomorrow;
-                    break;
-                case 'thisWeek':
-                    startDate = new Date(today);
-                    startDate.setDate(today.getDate() - today.getDay()); // Start of week (Sunday)
-                    endDate = new Date(startDate);
-                    endDate.setDate(startDate.getDate() + 6); // End of week (Saturday)
-                    break;
-                case 'nextWeek':
-                    startDate = new Date(today);
-                    startDate.setDate(today.getDate() - today.getDay() + 7); // Start of next week
-                    endDate = new Date(startDate);
-                    endDate.setDate(startDate.getDate() + 6); // End of next week
-                    break;
-                case 'thisMonth':
-                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-                    endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-                    break;
-                default:
-                    filterData();
-                    return;
-            }
-            
-            // Filter tournaments in the selected period
-            filteredData = tournamentsData.filter(tournament => {
-                const tournamentStart = parseDate(tournament.date);
-                const tournamentEnd = tournament.endDate && tournament.endDate !== tournament.date 
-                    ? parseDate(tournament.endDate) 
-                    : tournamentStart;
-                
-                if (!tournamentStart) return false;
-                
-                // Check if tournament overlaps with selected period
-                let inRange = tournamentStart <= endDate && tournamentEnd >= startDate;
-                
-                // Apply other filters
-                const ageFilter = document.getElementById('ageFilter').value;
-                const searchTerm = document.getElementById('searchTeam').value.toLowerCase();
-                
-                const matchesAge = !ageFilter || tournament.age === age
+</html>
